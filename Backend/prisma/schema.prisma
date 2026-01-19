@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  email        String   @unique
+  fullName     String
+  password     String
+  photoProfile String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  threads      Thread[]
+  replies      Reply[]
+  likes        Like[]
+
+  following    Follow[] @relation("following")
+  followers    Follow[] @relation("followers")
+}
+
+model Thread {
+  id        Int      @id @default(autoincrement())
+  content   String
+  image     String?
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  replies   Reply[]
+  likes     Like[]
+}
+
+model Reply {
+  id        Int      @id @default(autoincrement())
+  content   String
+
+  threadId  Int
+  thread    Thread   @relation(fields: [threadId], references: [id])
+
+  authorId  Int
+  author    User     @relation(fields: [authorId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Like {
+  id       Int @id @default(autoincrement())
+
+  threadId Int
+  userId   Int
+
+  thread   Thread @relation(fields: [threadId], references: [id])
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([threadId, userId])   // prevent double likes
+}
+
+model Follow {
+  id Int @id @default(autoincrement())
+
+  followerId Int
+  followingId Int
+
+  follower  User @relation("following", fields: [followerId], references: [id])
+  following User @relation("followers", fields: [followingId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([followerId, followingId]) 
+}

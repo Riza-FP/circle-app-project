@@ -1,0 +1,22 @@
+# Node
+node_modules/
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+logs
+*.log
+
+# OS
+.DS_Store
+
+# Prisma
+backend/prisma/migrations
+
+# IDE
+.vscode/
+.idea/
