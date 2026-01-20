@@ -2,10 +2,20 @@ import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import prisma from "../connections/client";
 import { generateToken } from "../utils/jwt";
+import { loginSchema, registerSchema } from "../validators/auth-validation";
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { username, name, email, password } = req.body;
+        const { value, error } = registerSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({
+                code: 400,
+                status: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        const { username, name, email, password } = value;
 
         const existingUser = await prisma.user.findFirst({
             where: {
@@ -48,6 +58,7 @@ export const register = async (req: Request, res: Response) => {
                 username: user.username,
                 name: user.fullName,
                 email: user.email,
+                bio: null,
                 token,
             },
         });
@@ -62,7 +73,15 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { identifier, password } = req.body;
+        const { value, error } = loginSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({
+                code: 400,
+                status: "error",
+                message: error.details[0].message,
+            });
+        }
+        const { identifier, password } = value;
 
         const user = await prisma.user.findFirst({
             where: {
@@ -105,6 +124,7 @@ export const login = async (req: Request, res: Response) => {
                 name: user.fullName,
                 email: user.email,
                 avatar: user.photoProfile || null,
+                bio: user.bio,
                 token,
             },
         });
@@ -113,6 +133,44 @@ export const login = async (req: Request, res: Response) => {
             code: 500,
             status: "error",
             message: "Invalid Login",
+        });
+    }
+};
+
+export const checkAuth = async (req: any, res: Response) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: {
+                id: req.user.user_id,
+            },
+        });
+
+        if (!user) {
+            return res.status(404).json({
+                code: 404,
+                status: "error",
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "User verified",
+            data: {
+                user_id: user.id,
+                username: user.username,
+                name: user.fullName,
+                email: user.email,
+                avatar: user.photoProfile || null,
+                bio: user.bio,
+            },
+        });
+    } catch (error) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
+            message: "Internal server error",
         });
     }
 };

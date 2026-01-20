@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login } from "../features/auth/authSlice";
+import { login, clearError } from "../features/auth/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,16 +14,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import type { RootState } from "../store/store";
+import { useEffect } from "react";
 
 export default function Login() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
   const { error, loading } = useSelector((state: RootState) => state.auth);
 
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const [form, setForm] = useState({
     identifier: "",
     password: "",
   });
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +48,7 @@ export default function Login() {
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-green-700">Circle</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-green-700">circle</CardTitle>
           <CardTitle className="text-xl font-bold text-center">Login to Circle</CardTitle>
           <CardDescription className="text-center">
             Welcome back! Please sign in to continue.

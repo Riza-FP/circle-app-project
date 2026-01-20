@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { registerUser, loginUser } from "./authService";
+import { registerUser, loginUser, checkAuth as apiCheckAuth } from "./authService";
 
 interface AuthState {
   user: any;
@@ -41,6 +41,18 @@ export const login = createAsyncThunk(
   }
 );
 
+export const authCheck = createAsyncThunk(
+  "auth/check",
+  async (_, thunkAPI) => {
+    try {
+      const res = await apiCheckAuth();
+      return res.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -49,6 +61,9 @@ const authSlice = createSlice({
       state.user = null;
       state.token = null;
       localStorage.removeItem("token");
+    },
+    clearError: (state) => {
+      state.error = null;
     },
   },
   extraReducers: (builder) => {
@@ -80,10 +95,24 @@ const authSlice = createSlice({
       .addCase(login.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(authCheck.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(authCheck.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+        state.token = localStorage.getItem("token");
+      })
+      .addCase(authCheck.rejected, (state) => {
+        state.loading = false;
+        state.user = null;
+        state.token = null;
+        localStorage.removeItem("token");
       });
   },
 });
 
-export const { logout } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 
 export default authSlice.reducer;

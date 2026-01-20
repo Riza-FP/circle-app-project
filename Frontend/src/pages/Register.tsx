@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { register } from "../features/auth/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { register, clearError } from "../features/auth/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useEffect } from "react";
 
 export default function Register() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
+  const { loading, error } = useSelector((state: any) => state.auth);
 
   const [form, setForm] = useState({
     username: "",
@@ -25,23 +27,40 @@ export default function Register() {
     password: "",
   });
 
+  useEffect(() => {
+    return () => {
+      dispatch(clearError());
+    };
+  }, [dispatch]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await dispatch(register(form));
-    navigate("/home");
+    try {
+      const resultAction = await dispatch(register(form));
+      if (register.fulfilled.match(resultAction)) {
+        navigate("/home");
+      }
+    } catch (err) {
+      console.error("Failed to register: ", err);
+    }
   };
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-center text-green-700">Circle</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-green-700">circle</CardTitle>
           <CardTitle className="text-xl font-bold text-center">Create an account</CardTitle>
           <CardDescription className="text-center">
             Join Circle today!
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/50 text-red-500 text-sm p-3 rounded-md mb-4">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="fullname">Full Name</Label>
@@ -93,8 +112,12 @@ export default function Register() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full bg-green-500 hover:bg-green-800 rounded-full">
-              Create Account
+            <Button
+              type="submit"
+              className="w-full bg-green-500 hover:bg-green-800 rounded-full"
+              disabled={loading}
+            >
+              {loading ? "Creating Account..." : "Create Account"}
             </Button>
           </form>
         </CardContent>

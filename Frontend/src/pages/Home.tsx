@@ -1,28 +1,38 @@
-import { useSelector, useDispatch } from "react-redux";
-import type { RootState } from "../store/store";
-import { logout } from "../features/auth/authSlice";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchThreads } from "../store/threadSlice";
+import CreateThread from "../components/CreateThread";
+import MainLayout from "../layout/MainLayout";
+import ThreadCard from "../components/ThreadCard";
 
-export default function Home() {
-  const user = useSelector((state: RootState) => state.auth.user);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+const Home = () => {
+  const dispatch = useDispatch<any>();
+  const threads = useSelector((state: any) => state.threads.list);
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+  useEffect(() => {
+    dispatch(fetchThreads());
+  }, [dispatch]);
+
+  const refresh = () => {
+    dispatch(fetchThreads());
   };
 
+
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background p-4 space-y-4">
-      <h1 className="text-4xl font-bold text-green-700">Welcome to Circle</h1>
+    <MainLayout>
+      <div className="border-b border-gray-800 pb-4">
+        <h1 className="text-2xl font-bold px-4 pt-4 mb-4">Home</h1>
+        <CreateThread refresh={refresh} />
+      </div>
 
-      {user && <p className="text-xl">Hello, {user.name}!</p>}
-
-      <Button onClick={handleLogout} variant="destructive">
-        Logout
-      </Button>
-    </div>
+      <div>
+        {threads.map((thread: any) => (
+          <ThreadCard key={thread.id} thread={thread} />
+        ))}
+      </div>
+    </MainLayout>
   );
-}
+};
+
+export default Home;

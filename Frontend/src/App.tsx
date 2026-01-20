@@ -4,7 +4,17 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import PrivateRoute from "./components/PrivateRoute";
 
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { authCheck } from "./features/auth/authSlice";
+
 function App() {
+  const dispatch = useDispatch<any>();
+
+  useEffect(() => {
+    dispatch(authCheck());
+  }, [dispatch]);
+
   return (
     <BrowserRouter>
       <Routes>
