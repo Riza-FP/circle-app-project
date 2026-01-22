@@ -28,9 +28,7 @@ export default function Register() {
   });
 
   useEffect(() => {
-    return () => {
-      dispatch(clearError());
-    };
+    dispatch(clearError());
   }, [dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {

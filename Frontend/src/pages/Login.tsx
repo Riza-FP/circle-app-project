@@ -22,9 +22,7 @@ export default function Login() {
   const { error, loading } = useSelector((state: RootState) => state.auth);
 
   useEffect(() => {
-    return () => {
-      dispatch(clearError());
-    };
+    dispatch(clearError());
   }, [dispatch]);
 
   const [form, setForm] = useState({
@@ -32,16 +30,14 @@ export default function Login() {
     password: "",
   });
 
-  useEffect(() => {
-    return () => {
-      dispatch(clearError());
-    };
-  }, [dispatch]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await dispatch(login(form));
-    navigate("/home");
+    const result = await dispatch(login(form));
+    if (login.fulfilled.match(result)) {
+      navigate("/home");
+    }
   };
 
   return (

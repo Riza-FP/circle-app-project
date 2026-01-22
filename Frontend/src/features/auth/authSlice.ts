@@ -48,7 +48,7 @@ export const authCheck = createAsyncThunk(
       const res = await apiCheckAuth();
       return res.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(error);
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Session expired");
     }
   }
 );

@@ -1,12 +1,14 @@
-import { Request, Response } from "express";
+import { Response } from "express";
 import prisma from "../connections/client";
 import { AuthRequest } from "../middlewares/auth-middleware";
 import { createThreadSchema } from "../validators/thread-validation";
+import { broadcastToClients } from "../app";
 
 
 export const createThread = async (req: AuthRequest, res: Response) => {
     try {
-        const { value, error } = createThreadSchema.validate(req.body);
+
+        const { error, value } = createThreadSchema.validate(req.body);
         if (error) {
             return res.status(400).json({
                 code: 400,
@@ -15,15 +17,26 @@ export const createThread = async (req: AuthRequest, res: Response) => {
             });
         }
 
-        const { content, image } = value;
+        const { content } = value;
         const userId = req.user.user_id;
+
+
+        const files = req.files as Express.Multer.File[];
+        const imageUrls = files?.map(file => `/uploads/${file.filename}`) || [];
+
 
         const thread = await prisma.thread.create({
             data: {
                 content,
-                image,
+                images: imageUrls,
                 authorId: userId,
             },
+        });
+
+
+        broadcastToClients({
+            type: "NEW_THREAD",
+            data: thread
         });
 
         return res.status(200).json({
@@ -33,6 +46,7 @@ export const createThread = async (req: AuthRequest, res: Response) => {
             data: {
                 id: thread.id,
                 content: thread.content,
+                images: thread.images,
                 created_at: thread.createdAt,
             },
         });
@@ -82,6 +96,7 @@ export const getThreads = async (req: AuthRequest, res: Response) => {
                     profile_picture: thread.author.photoProfile,
                 },
                 created_at: thread.createdAt,
+                images: thread.images,
                 likes: thread.likes.length,
                 reply: thread.replies.length,
                 isLiked: thread.likes.some(
@@ -120,6 +135,23 @@ export const likeThread = async (req: AuthRequest, res: Response) => {
                 threadId,
             },
         });
+
+        const thread = await prisma.thread.findUnique({
+            where: { id: threadId },
+            include: { author: true },
+        });
+
+        const liker = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (thread && liker) {
+            broadcastToClients({
+                type: "NOTIFICATION",
+                message: `${liker.fullName} liked your thread`,
+                userId: thread.authorId
+            });
+        }
 
         return res.status(200).json({
             code: 200,
@@ -187,6 +219,21 @@ export const replyThread = async (req: AuthRequest, res: Response) => {
             },
         });
 
+        const thread = await prisma.thread.findUnique({
+            where: { id: threadId },
+            include: { author: true }
+        });
+
+        const replier = await prisma.user.findUnique({ where: { id: userId } });
+
+        if (thread && replier) {
+            broadcastToClients({
+                type: "NOTIFICATION",
+                message: `${replier.fullName} replied to your thread`,
+                userId: thread.authorId
+            });
+        }
+
         return res.status(200).json({
             code: 200,
             status: "success",
@@ -199,6 +246,127 @@ export const replyThread = async (req: AuthRequest, res: Response) => {
             code: 500,
             status: "error",
             message: "Failed to reply thread",
+        });
+    }
+};
+
+export const deleteThread = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user.user_id;
+        const threadId = parseInt(req.params.id as string);
+
+        const thread = await prisma.thread.findUnique({
+            where: { id: threadId },
+        });
+
+        if (!thread) {
+            return res.status(404).json({
+                code: 404,
+                status: "error",
+                message: "Thread not found",
+            });
+        }
+
+        if (thread.authorId !== userId) {
+            return res.status(403).json({
+                code: 403,
+                status: "error",
+                message: "You are not authorized to delete this thread",
+            });
+        }
+
+        await prisma.thread.delete({
+            where: { id: threadId },
+        });
+
+        broadcastToClients({
+            type: "DELETE_THREAD",
+            threadId,
+        });
+
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "Thread deleted successfully",
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
+            message: "Failed to delete thread",
+        });
+    }
+};
+
+export const updateThread = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user.user_id;
+        const threadId = parseInt(req.params.id as string);
+
+        const { error, value } = createThreadSchema.validate(req.body);
+        if (error) {
+            return res.status(400).json({
+                code: 400,
+                status: "error",
+                message: error.details[0].message,
+            });
+        }
+
+        const thread = await prisma.thread.findUnique({
+            where: { id: threadId },
+        });
+
+        if (!thread) {
+            return res.status(404).json({
+                code: 404,
+                status: "error",
+                message: "Thread not found",
+            });
+        }
+
+        if (thread.authorId !== userId) {
+            return res.status(403).json({
+                code: 403,
+                status: "error",
+                message: "You are not authorized to update this thread",
+            });
+        }
+
+        const { content } = value;
+        const files = req.files as Express.Multer.File[];
+
+        let newImages = thread.images;
+
+        if (files && files.length > 0) {
+            newImages = files.map(file => `/uploads/${file.filename}`);
+        }
+
+        const updatedThread = await prisma.thread.update({
+            where: { id: threadId },
+            data: {
+                content,
+                images: newImages,
+            },
+        });
+
+        broadcastToClients({
+            type: "UPDATE_THREAD",
+            data: updatedThread,
+        });
+
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "Thread updated successfully",
+            data: updatedThread,
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
+            message: "Failed to update thread",
         });
     }
 };

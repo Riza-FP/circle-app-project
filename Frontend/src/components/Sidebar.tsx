@@ -1,11 +1,15 @@
 import { Link, useLocation } from "react-router-dom";
 import { Home, Search, Heart, User, LogOut } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import type { RootState } from "../store/store";
+
+import CreateThread from "./CreateThread";
 
 const Sidebar = () => {
+    const user = useSelector((state: RootState) => state.auth.user);
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,7 +23,7 @@ const Sidebar = () => {
         { icon: Home, label: "Home", path: "/home" },
         { icon: Search, label: "Search", path: "/search" },
         { icon: Heart, label: "Follows", path: "/follows" },
-        { icon: User, label: "Profile", path: "/profile" },
+        { icon: User, label: "Profile", path: `/profile/${user?.id || user?.user_id}` },
     ];
 
     return (
@@ -42,9 +46,11 @@ const Sidebar = () => {
                     );
                 })}
 
-                <Button className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full py-6 text-xl font-bold mt-8">
-                    Create Post
-                </Button>
+                <CreateThread>
+                    <Button className="w-full bg-green-500 hover:bg-green-600 text-white rounded-full py-6 text-xl font-bold mt-8">
+                        Create Post
+                    </Button>
+                </CreateThread>
             </nav>
 
             <button
