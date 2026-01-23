@@ -1,7 +1,7 @@
 import React, { createContext, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store/store";
-import { fetchThreads } from "../store/threadSlice";
+import { fetchThreads, updateLikesFromWebSocket } from "../store/threadSlice";
 
 interface WebSocketContextType {
     socket: WebSocket | null;
@@ -64,6 +64,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
                         setTimeout(() => setSuccessMessage(null), 5000);
                     }
                 }
+
+                if (data.type === "LIKE_UPDATE") {
+                    dispatch(updateLikesFromWebSocket(data.payload));
+                }
+
             } catch (error) {
                 console.error("Failed to parse websocket message", error);
             }

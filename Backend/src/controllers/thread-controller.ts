@@ -123,132 +123,73 @@ export const getThreads = async (req: AuthRequest, res: Response) => {
     }
 };
 
-
-export const likeThread = async (req: AuthRequest, res: Response) => {
+export const getThreadById = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user.user_id;
         const threadId = parseInt(req.params.id as string);
-
-        await prisma.like.create({
-            data: {
-                userId,
-                threadId,
-            },
-        });
 
         const thread = await prisma.thread.findUnique({
             where: { id: threadId },
-            include: { author: true },
-        });
-
-        const liker = await prisma.user.findUnique({
-            where: { id: userId }
-        });
-
-        if (thread && liker) {
-            broadcastToClients({
-                type: "NOTIFICATION",
-                message: `${liker.fullName} liked your thread`,
-                userId: thread.authorId
-            });
-        }
-
-        return res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Thread liked successfully",
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            code: 500,
-            status: "error",
-            message: "Failed to like thread",
-        });
-    }
-};
-
-
-export const unlikeThread = async (req: AuthRequest, res: Response) => {
-    try {
-        const userId = req.user.user_id;
-        const threadId = parseInt(req.params.id as string);
-
-        await prisma.like.deleteMany({
-            where: {
-                userId,
-                threadId,
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        photoProfile: true,
+                    },
+                },
+                likes: true,
+                replies: true,
             },
         });
 
-        return res.status(200).json({
-            code: 200,
-            status: "success",
-            message: "Thread unliked successfully",
-        });
-
-    } catch (error) {
-        return res.status(500).json({
-            code: 500,
-            status: "error",
-            message: "Failed to unlike thread",
-        });
-    }
-};
-
-
-export const replyThread = async (req: AuthRequest, res: Response) => {
-    try {
-        const userId = req.user.user_id;
-        const threadId = parseInt(req.params.id as string);
-        const { content } = req.body;
-
-        if (!content) {
-            return res.status(400).json({
-                code: 400,
+        if (!thread) {
+            return res.status(404).json({
+                code: 404,
                 status: "error",
-                message: "Reply content is required",
+                message: "Thread not found",
             });
         }
 
-        const reply = await prisma.reply.create({
-            data: {
-                content,
-                threadId,
-                authorId: userId,
+        const mappedThread = {
+            id: thread.id,
+            content: thread.content,
+            user: {
+                id: thread.author.id,
+                username: thread.author.username,
+                name: thread.author.fullName,
+                profile_picture: thread.author.photoProfile,
             },
-        });
-
-        const thread = await prisma.thread.findUnique({
-            where: { id: threadId },
-            include: { author: true }
-        });
-
-        const replier = await prisma.user.findUnique({ where: { id: userId } });
-
-        if (thread && replier) {
-            broadcastToClients({
-                type: "NOTIFICATION",
-                message: `${replier.fullName} replied to your thread`,
-                userId: thread.authorId
-            });
-        }
+            created_at: thread.createdAt,
+            images: thread.images,
+            likes: thread.likes.length,
+            reply: thread.replies.length,
+            isLiked: thread.likes.some(
+                (like: any) => like.userId === userId
+            ),
+        };
 
         return res.status(200).json({
             code: 200,
             status: "success",
-            message: "Reply created successfully",
-            data: reply,
+            message: "Get Data Thread Successfully",
+            data: mappedThread,
         });
 
     } catch (error) {
         return res.status(500).json({
             code: 500,
             status: "error",
-            message: "Failed to reply thread",
+            message: "Failed to get thread details",
         });
     }
 };
+
+
+
+
+
 
 export const deleteThread = async (req: AuthRequest, res: Response) => {
     try {

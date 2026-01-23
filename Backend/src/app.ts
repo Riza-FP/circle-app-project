@@ -3,6 +3,8 @@ import cors from "cors";
 import authRoutes from "./routes/auth-routes";
 import userRoutes from "./routes/user-routes";
 import threadRoutes from "./routes/thread-route";
+import replyRoutes from "./routes/reply-route";
+import likeRoutes from "./routes/like-route";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 
@@ -21,6 +23,8 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/thread", threadRoutes);
+app.use("/api/v1/reply", replyRoutes);
+app.use("/api/v1/like", likeRoutes);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

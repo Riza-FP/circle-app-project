@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
+import ThreadDetail from "./pages/ThreadDetail";
 import PrivateRoute from "./components/PrivateRoute";
 
 import { useDispatch } from "react-redux";
@@ -23,6 +24,7 @@ function App() {
 
         <Route element={<PrivateRoute />}>
           <Route path="/home" element={<Home />} />
+          <Route path="/thread/:id" element={<ThreadDetail />} />
         </Route>
       </Routes>
     </BrowserRouter>

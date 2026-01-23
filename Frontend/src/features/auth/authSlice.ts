@@ -6,6 +6,7 @@ interface AuthState {
   token: string | null;
   loading: boolean;
   error: string | null;
+  justLoggedOut: boolean;
 }
 
 const initialState: AuthState = {
@@ -13,6 +14,7 @@ const initialState: AuthState = {
   token: localStorage.getItem("token"),
   loading: false,
   error: null,
+  justLoggedOut: false,
 };
 
 export const register = createAsyncThunk(
@@ -60,7 +62,11 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.justLoggedOut = true; // Flag to prevent warning
       localStorage.removeItem("token");
+    },
+    resetJustLoggedOut: (state) => {
+      state.justLoggedOut = false;
     },
     clearError: (state) => {
       state.error = null;
@@ -96,8 +102,8 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      .addCase(authCheck.pending, (state) => {
-        state.loading = true;
+      .addCase(authCheck.pending, () => {
+        // state.loading = true; // Do not set loading true for background check to avoid flickering UI
       })
       .addCase(authCheck.fulfilled, (state, action) => {
         state.loading = false;
@@ -113,6 +119,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, clearError } = authSlice.actions;
+export const { logout, clearError, resetJustLoggedOut } = authSlice.actions;
 
 export default authSlice.reducer;

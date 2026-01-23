@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { login, clearError } from "../features/auth/authSlice";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,11 +19,18 @@ import { useEffect } from "react";
 export default function Login() {
   const dispatch = useDispatch<any>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { error, loading } = useSelector((state: RootState) => state.auth);
+  const [redirectMessage, setRedirectMessage] = useState<string | null>(null);
 
   useEffect(() => {
     dispatch(clearError());
-  }, [dispatch]);
+    if (location.state?.message) {
+      setRedirectMessage(location.state.message);
+      // Clear message from history so it doesn't persist on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [dispatch, location]);
 
   const [form, setForm] = useState({
     identifier: "",
@@ -52,6 +59,11 @@ export default function Login() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {redirectMessage && (
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative" role="alert">
+                <span className="block sm:inline">{redirectMessage}</span>
+              </div>
+            )}
             {error && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
                 <span className="block sm:inline">{error}</span>
