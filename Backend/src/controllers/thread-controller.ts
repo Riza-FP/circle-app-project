@@ -20,8 +20,8 @@ export const createThread = async (req: AuthRequest, res: Response) => {
         const { content } = value;
         const userId = req.user.user_id;
 
-
         const files = req.files as Express.Multer.File[];
+
         const imageUrls = files?.map(file => `/uploads/${file.filename}`) || [];
 
 

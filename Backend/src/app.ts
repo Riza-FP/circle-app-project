@@ -5,6 +5,8 @@ import userRoutes from "./routes/user-routes";
 import threadRoutes from "./routes/thread-route";
 import replyRoutes from "./routes/reply-route";
 import likeRoutes from "./routes/like-route";
+import profileRoutes from "./routes/profile-route";
+import followRoutes from "./routes/follow-route";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 
@@ -25,6 +27,8 @@ app.use("/api/v1/users", userRoutes);
 app.use("/api/v1/thread", threadRoutes);
 app.use("/api/v1/reply", replyRoutes);
 app.use("/api/v1/like", likeRoutes);
+app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1/follows", followRoutes);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

@@ -11,6 +11,17 @@ export const loginUser = async (data: any) => {
 };
 
 export const checkAuth = async () => {
-  const response = await api.get("/auth/check");
-  return response.data;
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No token found");
+  }
+  return api.get("/auth/check");
+};
+
+export const getProfile = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    throw new Error("No token found");
+  }
+  return api.get("/profile");
 };

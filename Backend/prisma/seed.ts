@@ -7,6 +7,7 @@ async function main() {
     console.log("Start seeding...");
 
     // clear existing data
+    await prisma.follow.deleteMany();
     await prisma.like.deleteMany();
     await prisma.reply.deleteMany();
     await prisma.thread.deleteMany();
@@ -27,7 +28,23 @@ async function main() {
             email: "nurlatifah@gmail.com",
             bio: "I love myself!",
             photoProfile: "https://i.imgur.com/SpIeXBO.jpeg"
-        } // Index 5
+        }, // Index 5
+        { username: "jake_gamer", fullName: "Jake The Gamer", email: "jake@example.com", bio: "Leveling up IRL 🎮" }, // Index 6
+        { username: "emma_reads", fullName: "Emma Watson", email: "emma@example.com", bio: "Lost in pages 📚" }, // Index 7
+        { username: "oliver_chef", fullName: "Oliver Cook", email: "oliver@example.com", bio: "Taste the world 🍳" }, // Index 8
+        { username: "mia_travels", fullName: "Mia Turner", email: "mia@example.com", bio: "Wanderlust ✈️" }, // Index 9
+        { username: "noah_tech", fullName: "Noah Smith", email: "noah@example.com", bio: "Building the future 🤖" }, // Index 10
+        { username: "ava_music", fullName: "Ava Melodies", email: "ava@example.com", bio: "Music is my therapy 🎵" }, // Index 11
+        { username: "ethan_code", fullName: "Ethan Hunt", email: "ethan@example.com", bio: "Mission Possible 🕵️‍♂️" },
+        { username: "zoe_photo", fullName: "Zoe Lens", email: "zoe@example.com", bio: "Capturing moments 📸" },
+        { username: "lucas_arch", fullName: "Lucas Builds", email: "lucas@example.com", bio: "Designing skylines 🏙️" },
+        { username: "chloe_dance", fullName: "Chloe Moves", email: "chloe@example.com", bio: "Dance like nobody's watching 💃" },
+        { username: "ryan_run", fullName: "Ryan Miles", email: "ryan@example.com", bio: "Marathon mindset 🏃‍♂️" },
+        { username: "lily_green", fullName: "Lily Gardens", email: "lily@example.com", bio: "Plant mom 🌿" },
+        { username: "mason_car", fullName: "Mason Speed", email: "mason@example.com", bio: "Vroom Vroom 🏎️" },
+        { username: "grace_bank", fullName: "Grace Finance", email: "grace@example.com", bio: "Investing in future 📈" },
+        { username: "leo_wild", fullName: "Leo King", email: "leo@example.com", bio: "King of the jungle 🦁" },
+        { username: "nora_write", fullName: "Nora Tales", email: "nora@example.com", bio: "Weaving stories ✍️" },
     ];
 
     const users = [];
@@ -156,7 +173,30 @@ async function main() {
         }
     }
 
-    console.log("Seeding finished.");
+    // 4. Seed Follows
+    console.log("Seeding follows...");
+    for (const follower of users) {
+        // Each user follows 2-5 random other users
+        const numberOfFollows = Math.floor(Math.random() * 4) + 2;
+        const potentialFollowings = users.filter(u => u.id !== follower.id);
+
+        // Shuffle array to pick random users
+        const shuffled = potentialFollowings.sort(() => 0.5 - Math.random());
+        const selectedFollowings = shuffled.slice(0, numberOfFollows);
+
+        for (const following of selectedFollowings) {
+            // Check if follow exists to avoid unique constraint error if re-running part of logic, though we wipe DB at start.
+            // But simpler to just use create since we deleteMany at start.
+            // Just ensuring it's outside the loop.
+            await prisma.follow.create({
+                data: {
+                    followerId: follower.id,
+                    followingId: following.id
+                }
+            });
+        }
+    }
+
 }
 
 main()

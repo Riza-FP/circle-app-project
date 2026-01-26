@@ -14,6 +14,7 @@ model User {
   fullName     String
   password     String
   photoProfile String?
+  coverPhoto   String?
   bio          String?
 
   createdAt    DateTime @default(now())
@@ -42,32 +43,37 @@ model Thread {
   likes     Like[]
 }
 
-model Reply {
-  id        Int      @id @default(autoincrement())
-  content   String
-  images    String[]
-
-  threadId  Int
-  thread    Thread   @relation(fields: [threadId], references: [id])
-
-  authorId  Int
-  author    User     @relation(fields: [authorId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Like {
-  id       Int @id @default(autoincrement())
-
-  threadId Int
-  userId   Int
-
-  thread   Thread @relation(fields: [threadId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
-
-  @@unique([threadId, userId])
-}
+ model Reply {
+   id        Int      @id @default(autoincrement())
+   content   String
+   images    String[]
+ 
+   threadId  Int
+   thread    Thread   @relation(fields: [threadId], references: [id])
+ 
+   authorId  Int
+   author    User     @relation(fields: [authorId], references: [id])
+ 
+   likes     Like[]
+ 
+   createdAt DateTime @default(now())
+   updatedAt DateTime @updatedAt
+ }
+ 
+ model Like {
+   id       Int @id @default(autoincrement())
+ 
+   threadId Int?
+   replyId  Int?
+   userId   Int
+ 
+   thread   Thread? @relation(fields: [threadId], references: [id])
+   reply    Reply?  @relation(fields: [replyId], references: [id])
+   user     User    @relation(fields: [userId], references: [id])
+ 
+   @@unique([threadId, userId]) // Keep existing constraint for threads
+   @@unique([replyId, userId])  // Add new constraint for replies
+ }
 
 model Follow {
   id Int @id @default(autoincrement())

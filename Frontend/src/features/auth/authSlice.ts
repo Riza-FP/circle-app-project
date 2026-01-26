@@ -1,20 +1,30 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { registerUser, loginUser, checkAuth as apiCheckAuth } from "./authService";
+import { registerUser, loginUser, checkAuth as apiCheckAuth, getProfile } from "./authService";
 
 interface AuthState {
   user: any;
   token: string | null;
   loading: boolean;
   error: string | null;
-  justLoggedOut: boolean;
 }
+
+export const fetchProfile = createAsyncThunk(
+  "auth/fetchProfile",
+  async (_, thunkAPI) => {
+    try {
+      const res = await getProfile();
+      return res.data.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to fetch profile");
+    }
+  }
+);
 
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem("token"),
   loading: false,
   error: null,
-  justLoggedOut: false,
 };
 
 export const register = createAsyncThunk(
@@ -62,11 +72,7 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
-      state.justLoggedOut = true; // Flag to prevent warning
       localStorage.removeItem("token");
-    },
-    resetJustLoggedOut: (state) => {
-      state.justLoggedOut = false;
     },
     clearError: (state) => {
       state.error = null;
@@ -115,10 +121,17 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         localStorage.removeItem("token");
+      })
+      .addCase(fetchProfile.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload };
+        } else {
+          state.user = action.payload;
+        }
       });
   },
 });
 
-export const { logout, clearError, resetJustLoggedOut } = authSlice.actions;
+export const { logout, clearError } = authSlice.actions;
 
 export default authSlice.reducer;

@@ -3,28 +3,40 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Image, X } from "lucide-react";
 import ThreadCard from "../components/ThreadCard";
 import ReplyCard from "../components/ReplyCard";
-import { getThreadById, getReplies, createReply } from "../services/threadApi";
+import { getThreadById, createReply, getReplies } from "../services/threadApi";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store/store";
+import { upsertThread } from "../store/threadSlice";
 import MainLayout from "../layout/MainLayout";
 import { WebSocketContext } from "../contexts/WebSocketContext";
 
 const ThreadDetail = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const dispatch = useDispatch<any>(); // Add dispatch
     const user = useSelector((state: RootState) => state.auth.user);
-    const { setSuccessMessage } = useContext(WebSocketContext)!;
+    const { setSuccessMessage, newReply } = useContext(WebSocketContext)!;
 
-    const [thread, setThread] = useState<any>(null);
+    // Select thread from Redux store
+    const threadFromStore = useSelector((state: RootState) =>
+        state.threads.list.find(t => t.id === Number(id))
+    );
+
+
+    const [localThread, setLocalThread] = useState<any>(null); // Rename to localThread
     const [replies, setReplies] = useState<any[]>([]);
     const [replyContent, setReplyContent] = useState("");
     const [isLoading, setIsLoading] = useState(true);
     const [isPostingReply, setIsPostingReply] = useState(false);
 
+    // Use thread from store if available, otherwise local state
+    const thread = threadFromStore || localThread;
+
     // Image Upload State
     const [replyImages, setReplyImages] = useState<File[]>([]);
+    // ...
     const [replyPreviews, setReplyPreviews] = useState<string[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -36,7 +48,8 @@ const ThreadDetail = () => {
                 getThreadById(Number(id)),
                 getReplies(Number(id))
             ]);
-            setThread(threadRes.data.data);
+            setLocalThread(threadRes.data.data);
+            dispatch(upsertThread(threadRes.data.data)); // Sync thread with Redux
             setReplies(repliesRes.data.data.replies);
         } catch (error) {
             console.error("Failed to fetch thread details", error);
@@ -48,6 +61,21 @@ const ThreadDetail = () => {
     useEffect(() => {
         fetchData();
     }, [id]);
+
+    // Real-time reply update
+    useEffect(() => {
+        if (newReply && newReply.threadId === Number(id)) {
+            // Check if reply already exists to avoid duplicates (though duplication unlikely with simple append unless event fires twice)
+            setReplies(prev => {
+                if (prev.find(r => r.id === newReply.data.id)) return prev;
+                return [newReply.data, ...prev]; // Prepend or append? Usually replies are chronological?
+                // API sorts by createdAt desc (newest first). So we should prepend?
+                // Wait, default sort in getReplies: orderBy: { createdAt: "desc" }
+                // So mappedReplies has newest first.
+                // So we should prepend newReply.data.
+            });
+        }
+    }, [newReply, id]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;

@@ -1,27 +1,26 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import type { RootState } from "../store/store";
-import { resetJustLoggedOut } from "../features/auth/authSlice";
+import { fetchProfile } from "../features/auth/authSlice";
 import { useEffect } from "react";
 
 const PrivateRoute = () => {
-    const { token, justLoggedOut } = useSelector((state: RootState) => state.auth);
-    const dispatch = useDispatch();
+    const { token, user } = useSelector((state: RootState) => state.auth);
+    const dispatch = useDispatch<any>();
 
     useEffect(() => {
-        if (!token && justLoggedOut) {
-            dispatch(resetJustLoggedOut());
+        if (token && user && user.follower_count === undefined) {
+            dispatch(fetchProfile());
         }
-    }, [token, justLoggedOut, dispatch]);
+    }, [token, user, dispatch]);
 
     if (!token) {
-        if (justLoggedOut) {
-            return <Navigate to="/" replace />;
-        }
         return <Navigate to="/" replace state={{ message: "Please login to continue" }} />;
     }
 
     return <Outlet />;
 };
+
+
 
 export default PrivateRoute;

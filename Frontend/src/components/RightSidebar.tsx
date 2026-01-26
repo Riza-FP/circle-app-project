@@ -10,7 +10,14 @@ const RightSidebar = () => {
     return (
         <div className="fixed right-0 top-0 h-screen w-[300px] p-4 border-l border-gray-800 bg-background flex flex-col space-y-4 overflow-y-auto custom-scrollbar">
             <Card className="bg-gray-900 border-none text-white overflow-hidden">
-                <div className="h-20 bg-gradient-to-r from-green-200 to-blue-200" />
+                <div
+                    className="h-20 bg-cover bg-center bg-no-repeat"
+                    style={{
+                        backgroundImage: user?.cover_photo
+                            ? `url(${user.cover_photo})`
+                            : 'linear-gradient(to right, #badefc, #fca5a5)'
+                    }}
+                />
                 <div className="px-4 pb-4 -mt-8 relative">
                     <div className="flex justify-between items-end mb-4">
                         <Avatar className="w-16 h-16 border-4 border-gray-900 bg-gray-900">
@@ -27,8 +34,8 @@ const RightSidebar = () => {
                         <p className="mt-2 text-sm line-clamp-2">{user?.bio || "My bio is empty..."}</p>
 
                         <div className="flex space-x-3 mt-3 text-sm">
-                            <div><span className="font-bold">291</span> <span className="text-gray-500">Following</span></div>
-                            <div><span className="font-bold">23</span> <span className="text-gray-500">Followers</span></div>
+                            <div><span className="font-bold">{user?.following_count || 0}</span> <span className="text-gray-500">Following</span></div>
+                            <div><span className="font-bold">{user?.follower_count || 0}</span> <span className="text-gray-500">Followers</span></div>
                         </div>
                     </div>
                 </div>

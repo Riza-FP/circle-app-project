@@ -37,6 +37,7 @@ export const unlikeThread = async (id: number) => {
 };
 
 
+
 export const deleteThread = async (id: number) => {
     return api.delete(`/thread/${id}`);
 };

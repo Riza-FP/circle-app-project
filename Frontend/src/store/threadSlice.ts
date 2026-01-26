@@ -94,6 +94,14 @@ const threadSlice = createSlice({
             if (thread) {
                 thread.likes = action.payload.likes;
             }
+        },
+        upsertThread: (state, action: PayloadAction<Thread>) => {
+            const index = state.list.findIndex(t => t.id === action.payload.id);
+            if (index !== -1) {
+                state.list[index] = action.payload;
+            } else {
+                state.list.unshift(action.payload);
+            }
         }
     },
     extraReducers: (builder) => {
@@ -108,6 +116,6 @@ const threadSlice = createSlice({
     },
 });
 
-export const { optimisticLike, optimisticUnlike, revertLike, updateLikesFromWebSocket } = threadSlice.actions;
+export const { optimisticLike, optimisticUnlike, revertLike, updateLikesFromWebSocket, upsertThread } = threadSlice.actions;
 
 export default threadSlice.reducer;

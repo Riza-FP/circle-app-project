@@ -1,8 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { useRef, useState, useContext } from "react";
-import { Check, Edit, Heart, Image as ImageIcon, MoreHorizontal, Trash, X } from "lucide-react";
-import { deleteReply, updateReply } from "../services/threadApi"; // Ensure getReplies is imported or handle refresh differently
+import { Check, Edit, Image as ImageIcon, MoreHorizontal, Trash, X } from "lucide-react";
+import { deleteReply, updateReply } from "../services/threadApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -29,6 +29,11 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const isAuthor = (currentUser?.id || currentUser?.user_id) === reply.user.id;
+
+
+
+
+
 
     const handleDeleteClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -72,8 +77,6 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
             setIsEditing(false);
             setEditImages([]);
             if (onRefresh) onRefresh();
-
-
         } catch (error) {
             console.error("Failed to update reply", error);
         }
@@ -221,10 +224,7 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
                 )}
 
                 <div className="flex items-center space-x-6 mt-4 text-gray-500">
-                    <button className="flex items-center space-x-2 group hover:text-red-500">
-                        <Heart className="w-5 h-5 group-hover:fill-current" />
-                        <span className="text-sm">0</span>
-                    </button>
+                    {/* Likes functionality removed as per user request */}
                 </div>
             </div>
 

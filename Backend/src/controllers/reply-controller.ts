@@ -20,6 +20,7 @@ export const createReply = async (req: AuthRequest, res: Response) => {
             });
         }
 
+
         if (!thread_id) {
             return res.status(400).json({
                 code: 400,
@@ -49,16 +50,44 @@ export const createReply = async (req: AuthRequest, res: Response) => {
 
         const replier = await prisma.user.findUnique({ where: { id: userId } });
 
-        if (thread && replier) {
+        const fullReply = await prisma.reply.findUnique({
+            where: { id: reply.id },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        photoProfile: true,
+                    }
+                }
+            }
+        });
+
+        if (thread && replier && fullReply) {
             broadcastToClients({
                 type: "NOTIFICATION",
                 message: `${replier.fullName} replied to your thread`,
                 userId: thread.authorId
             });
-            // Also broadcast the new reply so the thread detail can update live?
+
+            // Format reply to match getReplies structure
+            const formattedReply = {
+                id: fullReply.id,
+                content: fullReply.content,
+                user: {
+                    id: fullReply.author.id,
+                    username: fullReply.author.username,
+                    name: fullReply.author.fullName,
+                    profile_picture: fullReply.author.photoProfile,
+                },
+                created_at: fullReply.createdAt,
+                images: fullReply.images,
+            };
+
             broadcastToClients({
                 type: "NEW_REPLY",
-                data: reply,
+                data: formattedReply,
                 threadId: threadId
             });
         }
@@ -136,6 +165,7 @@ export const getReplies = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
+        console.error(error);
         return res.status(500).json({
             code: 500,
             status: "error",
