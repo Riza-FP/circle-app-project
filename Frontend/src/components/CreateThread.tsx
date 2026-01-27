@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { getAvatarUrl } from "../utils/imageUtils";
 import { createThread } from "../services/threadApi";
 import { Button } from "@/components/ui/button";
 import { Image } from "lucide-react";
@@ -70,6 +71,7 @@ const CreateThread = ({ children }: { children: React.ReactNode }) => {
             });
 
             await new Promise((resolve) => setTimeout(resolve, 1500));
+
             await createThread(formData);
 
             // Wait for WebSocket to close dialog via useEffect
@@ -88,7 +90,7 @@ const CreateThread = ({ children }: { children: React.ReactNode }) => {
             <DialogContent className="sm:max-w-[500px] bg-black text-white border-gray-800">
                 <div className="flex space-x-4 p-4">
                     <Avatar>
-                        <AvatarImage src={user?.avatar} className="object-cover" />
+                        <AvatarImage src={getAvatarUrl(user?.avatar)} className="object-cover" />
                         <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 space-y-4">
@@ -101,8 +103,8 @@ const CreateThread = ({ children }: { children: React.ReactNode }) => {
 
                         {previews.length > 0 && (
                             <div className={`grid gap-2 ${previews.length === 1 ? 'grid-cols-1' :
-                                    previews.length === 2 ? 'grid-cols-2' :
-                                        'grid-cols-2'
+                                previews.length === 2 ? 'grid-cols-2' :
+                                    'grid-cols-2'
                                 }`}>
                                 {previews.map((preview, index) => (
                                     <div key={index} className="relative group">

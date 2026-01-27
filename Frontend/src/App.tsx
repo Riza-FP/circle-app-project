@@ -12,6 +12,8 @@ import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import { authCheck } from "./features/auth/authSlice";
 
+import { Toaster } from "@/components/ui/sonner";
+
 function App() {
   const dispatch = useDispatch<any>();
 
@@ -33,6 +35,7 @@ function App() {
           <Route path="/thread/:id" element={<ThreadDetail />} />
         </Route>
       </Routes>
+      <Toaster />
     </BrowserRouter>
   );
 }

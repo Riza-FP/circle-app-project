@@ -32,6 +32,7 @@ export const register = createAsyncThunk(
   async (data: any, thunkAPI) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const res = await registerUser(data);
       return res.data;
     } catch (error: any) {
@@ -45,6 +46,7 @@ export const login = createAsyncThunk(
   async (data: any, thunkAPI) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
+
       const res = await loginUser(data);
       return res.data;
     } catch (error: any) {

@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "../utils/imageUtils";
 import { formatDistanceToNow } from "date-fns";
 import { useRef, useState, useContext } from "react";
+import { useNavigate } from "react-router-dom";
 import { Check, Edit, Image as ImageIcon, MoreHorizontal, Trash, X } from "lucide-react";
 import { deleteReply, updateReply } from "../services/threadApi";
 import { useSelector } from "react-redux";
@@ -17,6 +19,7 @@ interface ReplyCardProps {
 const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const { setSuccessMessage } = useContext(WebSocketContext)!;
+    const navigate = useNavigate();
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -106,15 +109,37 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
 
     return (
         <div className="flex space-x-4 p-4 border-b border-gray-800 hover:bg-white/5 transition-colors cursor-pointer relative">
-            <Avatar className="w-10 h-10 rounded-full">
-                <AvatarImage src={reply.user.profile_picture} className="object-cover" />
+            <Avatar
+                className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/profile/${reply.user.id}`);
+                }}
+            >
+                <AvatarImage src={getAvatarUrl(reply.user.profile_picture)} className="object-cover" />
                 <AvatarFallback>{reply.user.name[0]}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                        <span className="font-bold text-white">{reply.user.name}</span>
-                        <span className="text-gray-500">@{reply.user.username}</span>
+                        <span
+                            className="font-bold text-white hover:underline cursor-pointer"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${reply.user.id}`);
+                            }}
+                        >
+                            {reply.user.name}
+                        </span>
+                        <span
+                            className="text-gray-500 hover:underline cursor-pointer"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/profile/${reply.user.id}`);
+                            }}
+                        >
+                            @{reply.user.username}
+                        </span>
                         <span className="text-gray-500">•</span>
                         <span className="text-gray-500 text-sm">
                             {reply.created_at

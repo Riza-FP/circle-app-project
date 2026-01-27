@@ -1,6 +1,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "../utils/imageUtils";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { followUser, unfollowUser } from "../services/followApi";
 import { useSelector } from "react-redux";
 import type { RootState } from "../store/store";
@@ -19,6 +21,7 @@ const FollowCard = ({ user }: FollowCardProps) => {
     const [isFollowing, setIsFollowing] = useState(user.is_following);
     const [loading, setLoading] = useState(false);
     const currentUser = useSelector((state: RootState) => state.auth.user);
+    const navigate = useNavigate();
 
     const handleFollowToggle = async () => {
         setLoading(true);
@@ -42,13 +45,16 @@ const FollowCard = ({ user }: FollowCardProps) => {
 
     return (
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
-            <div className="flex items-center space-x-3">
+            <div
+                className="flex items-center space-x-3 cursor-pointer"
+                onClick={() => navigate(`/profile/${user.id}`)}
+            >
                 <Avatar className="w-10 h-10 border border-gray-700">
-                    <AvatarImage src={user.avatar || ""} className="object-cover" />
+                    <AvatarImage src={getAvatarUrl(user.avatar)} className="object-cover" />
                     <AvatarFallback>{user.name?.[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                    <h4 className="text-white font-bold text-sm">{user.name}</h4>
+                    <h4 className="text-white font-bold text-sm hover:underline">{user.name}</h4>
                     <p className="text-gray-500 text-xs">@{user.username}</p>
                 </div>
             </div>
@@ -57,8 +63,8 @@ const FollowCard = ({ user }: FollowCardProps) => {
                 <Button
                     variant={isFollowing ? "outline" : "default"}
                     className={`rounded-full h-8 text-xs px-4 ${isFollowing
-                            ? "text-gray-400 border-gray-600 hover:text-white hover:border-gray-400 bg-transparent"
-                            : "bg-white text-black hover:bg-gray-200"
+                        ? "text-gray-400 border-gray-600 hover:text-white hover:border-gray-400 bg-transparent"
+                        : "bg-white text-black hover:bg-gray-200"
                         }`}
                     onClick={handleFollowToggle}
                     disabled={loading}

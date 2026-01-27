@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "../utils/imageUtils";
 import { formatDistanceToNow } from "date-fns";
 import { useRef, useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
@@ -118,15 +119,37 @@ const ThreadCard = ({ thread, hideReplyButton }: ThreadCardProps) => {
                 onClick={() => navigate(`/thread/${thread.id}`)}
                 className="flex space-x-4 p-4 border-b border-gray-800 hover:bg-white/5 transition-colors cursor-pointer relative"
             >
-                <Avatar className="w-10 h-10 rounded-full">
-                    <AvatarImage src={thread.user.profile_picture} className="object-cover" />
+                <Avatar
+                    className="w-10 h-10 rounded-full cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/profile/${thread.user.id}`);
+                    }}
+                >
+                    <AvatarImage src={getAvatarUrl(thread.user.profile_picture)} className="object-cover" />
                     <AvatarFallback>{thread.user.name[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
-                            <span className="font-bold">{thread.user.name}</span>
-                            <span className="text-gray-500">@{thread.user.username}</span>
+                            <span
+                                className="font-bold hover:underline cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/profile/${thread.user.id}`);
+                                }}
+                            >
+                                {thread.user.name}
+                            </span>
+                            <span
+                                className="text-gray-500 hover:underline cursor-pointer"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/profile/${thread.user.id}`);
+                                }}
+                            >
+                                @{thread.user.username}
+                            </span>
                             <span className="text-gray-500">•</span>
                             <span className="text-gray-500 text-sm">
                                 {thread.created_at

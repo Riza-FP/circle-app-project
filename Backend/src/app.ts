@@ -7,6 +7,7 @@ import replyRoutes from "./routes/reply-route";
 import likeRoutes from "./routes/like-route";
 import profileRoutes from "./routes/profile-route";
 import followRoutes from "./routes/follow-route";
+import searchRoutes from "./routes/search-route";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
 
@@ -29,6 +30,7 @@ app.use("/api/v1/reply", replyRoutes);
 app.use("/api/v1/like", likeRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/follows", followRoutes);
+app.use("/api/v1/search", searchRoutes);
 
 const server = http.createServer(app);
 const wss = new WebSocketServer({ server });

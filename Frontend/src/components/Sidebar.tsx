@@ -27,7 +27,7 @@ const Sidebar = () => {
     ];
 
     return (
-        <div className="flex flex-col h-screen fixed left-0 top-0 w-[250px] p-6 border-r border-gray-800 bg-background">
+        <div className="flex flex-col h-screen sticky top-0 p-6 border-r border-gray-800 bg-background">
             <h1 className="text-4xl font-bold text-green-500 mb-8 pl-2">circle</h1>
 
             <nav className="flex-1 space-y-4">

@@ -61,3 +61,13 @@ export const updateReply = async (id: number, data: FormData) => {
         },
     });
 };
+
+export const getThreadsByUser = async (userId: number, type?: "media") => {
+    try {
+        const url = type ? `/thread/user/${userId}?type=${type}` : `/thread/user/${userId}`;
+        const response = await api.get(url);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

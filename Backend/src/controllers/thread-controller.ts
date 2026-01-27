@@ -1,6 +1,7 @@
 import { Response } from "express";
 import prisma from "../connections/client";
 import { AuthRequest } from "../middlewares/auth-middleware";
+import redis from "../libs/redis";
 import { createThreadSchema } from "../validators/thread-validation";
 import { broadcastToClients } from "../app";
 
@@ -34,6 +35,13 @@ export const createThread = async (req: AuthRequest, res: Response) => {
         });
 
 
+        // Invalidate Cache
+        try {
+            await redis.del("threads:all");
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
+
         broadcastToClients({
             type: "NEW_THREAD",
             data: thread
@@ -63,8 +71,29 @@ export const createThread = async (req: AuthRequest, res: Response) => {
 
 export const getThreads = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.user.user_id;
+        const userId = req.user?.user_id;
         const limit = Number(req.query.limit) || 25;
+        const CACHE_KEY = "threads:all";
+
+        // Try to fetch from cache
+        try {
+            const start = Date.now();
+            const cachedThreads = await redis.get(CACHE_KEY);
+            if (cachedThreads) {
+                console.log(`[REDIS] Cache HIT (Time: ${Date.now() - start}ms)`);
+                return res.status(200).json({
+                    code: 200,
+                    status: "success",
+                    message: "Threads fetched from cache",
+                    data: {
+                        threads: JSON.parse(cachedThreads)
+                    },
+                });
+            }
+            console.log(`[REDIS] Cache MISS (Time: ${Date.now() - start}ms)`);
+        } catch (error) {
+            console.warn("Redis cache error (getThreads):", error);
+        }
 
         const threads = await prisma.thread.findMany({
             take: limit,
@@ -99,11 +128,18 @@ export const getThreads = async (req: AuthRequest, res: Response) => {
                 images: thread.images,
                 likes: thread.likes.length,
                 reply: thread.replies.length,
-                isLiked: thread.likes.some(
+                isLiked: userId ? thread.likes.some(
                     (like: any) => like.userId === userId
-                ),
+                ) : false,
             };
         });
+
+        // Store in cache for 60 seconds
+        try {
+            await redis.set(CACHE_KEY, JSON.stringify(mappedThreads), "EX", 60);
+        } catch (error) {
+            console.warn("Redis cache set error (getThreads):", error);
+        }
 
         return res.status(200).json({
             code: 200,
@@ -220,6 +256,13 @@ export const deleteThread = async (req: AuthRequest, res: Response) => {
             where: { id: threadId },
         });
 
+        // Invalidate Cache
+        try {
+            await redis.del("threads:all");
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
+
         broadcastToClients({
             type: "DELETE_THREAD",
             threadId,
@@ -296,6 +339,16 @@ export const updateThread = async (req: AuthRequest, res: Response) => {
             data: updatedThread,
         });
 
+        // Invalidate Cache
+        // Invalidate Cache
+        try {
+            await redis.del("threads:all");
+            await redis.del(`threads:user:${userId}:all`);
+            await redis.del(`threads:user:${userId}:media`);
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
+
         return res.status(200).json({
             code: 200,
             status: "success",
@@ -308,6 +361,117 @@ export const updateThread = async (req: AuthRequest, res: Response) => {
             code: 500,
             status: "error",
             message: "Failed to update thread",
+        });
+    }
+};
+
+export const getThreadsByUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = parseInt(req.params.id as string);
+        const currentUserId = req.user?.user_id;
+        const type = req.query.type as string; // 'media' or undefined
+
+        // Determine Cache Key based on type
+        const CACHE_KEY = `threads:user:${userId}:${type === 'media' ? 'media' : 'all'}`;
+
+        if (isNaN(userId)) {
+            return res.status(400).json({
+                code: 400,
+                status: "error",
+                message: "Invalid user ID",
+            });
+        }
+
+        // Try to fetch from cache
+        try {
+            const cachedThreads = await redis.get(CACHE_KEY);
+            if (cachedThreads) {
+                return res.status(200).json({
+                    code: 200,
+                    status: "success",
+                    message: "User threads fetched from cache",
+                    data: {
+                        threads: JSON.parse(cachedThreads)
+                    },
+                });
+            }
+        } catch (error) {
+            console.warn("Redis cache error (getThreadsByUser):", error);
+        }
+
+        // Build Where Clause
+        const whereClause: any = {
+            authorId: userId
+        };
+
+        if (type === 'media') {
+            whereClause.NOT = {
+                images: {
+                    equals: []
+                }
+            };
+        }
+
+        const threads = await prisma.thread.findMany({
+            where: whereClause,
+            orderBy: {
+                createdAt: "desc",
+            },
+            include: {
+                author: {
+                    select: {
+                        id: true,
+                        username: true,
+                        fullName: true,
+                        photoProfile: true,
+                    },
+                },
+                likes: true,
+                replies: true,
+            },
+        });
+
+        const mappedThreads = threads.map((thread: any) => {
+            return {
+                id: thread.id,
+                content: thread.content,
+                user: {
+                    id: thread.author.id,
+                    username: thread.author.username,
+                    name: thread.author.fullName,
+                    profile_picture: thread.author.photoProfile,
+                },
+                created_at: thread.createdAt,
+                images: thread.images,
+                likes: thread.likes.length,
+                reply: thread.replies.length,
+                isLiked: currentUserId ? thread.likes.some(
+                    (like: any) => like.userId === currentUserId
+                ) : false,
+            };
+        });
+
+        // Store in cache for 60 seconds
+        try {
+            await redis.set(CACHE_KEY, JSON.stringify(mappedThreads), "EX", 60);
+        } catch (error) {
+            console.warn("Redis cache set error (getThreadsByUser):", error);
+        }
+
+        return res.status(200).json({
+            code: 200,
+            status: "success",
+            message: "User threads fetched successfully",
+            data: {
+                threads: mappedThreads,
+            },
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            code: 500,
+            status: "error",
+            message: "Failed to get user threads",
         });
     }
 };

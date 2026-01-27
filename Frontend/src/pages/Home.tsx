@@ -5,6 +5,7 @@ import CreateThread from "../components/CreateThread";
 import MainLayout from "../layout/MainLayout";
 import ThreadCard from "../components/ThreadCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 const Home = () => {
   const dispatch = useDispatch<any>();
@@ -24,7 +25,7 @@ const Home = () => {
           <CreateThread>
             <div className="flex items-center space-x-4 cursor-text w-full">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={user?.avatar} className="object-cover" />
+                <AvatarImage src={getAvatarUrl(user?.avatar)} className="object-cover" />
                 <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
               </Avatar>
               <div className="text-gray-500 text-xl">What is happening?!</div>

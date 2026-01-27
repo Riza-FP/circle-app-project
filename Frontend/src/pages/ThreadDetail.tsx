@@ -11,6 +11,7 @@ import type { RootState } from "../store/store";
 import { upsertThread } from "../store/threadSlice";
 import MainLayout from "../layout/MainLayout";
 import { WebSocketContext } from "../contexts/WebSocketContext";
+import { getAvatarUrl } from "../utils/imageUtils";
 
 const ThreadDetail = () => {
     const { id } = useParams<{ id: string }>();
@@ -99,6 +100,7 @@ const ThreadDetail = () => {
         try {
             await new Promise((resolve) => setTimeout(resolve, 1000));
 
+
             const formData = new FormData();
             formData.append("thread_id", id);
             formData.append("content", replyContent);
@@ -154,7 +156,7 @@ const ThreadDetail = () => {
                         <div className="p-4 border-b border-gray-800">
                             <div className="flex gap-3">
                                 <Avatar className="w-10 h-10">
-                                    <AvatarImage src={user?.avatar} />
+                                    <AvatarImage src={getAvatarUrl(user?.avatar)} />
                                     <AvatarFallback>{user?.name?.[0]}</AvatarFallback>
                                 </Avatar>
                                 <div className="flex-1">

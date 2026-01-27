@@ -12,4 +12,15 @@ router.get("/me", authMiddleware, (req: AuthRequest, res) => {
     });
 });
 
+router.get("/suggested", authMiddleware, (req, res) => {
+    // Lazy load controller to avoid circular deps if any, or just import top level
+    const userController = require("../controllers/user-controller");
+    userController.getSuggestedUsers(req, res);
+});
+
+router.get("/:id", authMiddleware, (req, res) => {
+    const userController = require("../controllers/user-controller");
+    userController.getUserById(req, res);
+});
+
 export default router;
