@@ -3,6 +3,7 @@ import prisma from "../connections/client";
 import { AuthRequest } from "../middlewares/auth-middleware";
 import { createThreadSchema } from "../validators/thread-validation";
 import { broadcastToClients } from "../app";
+import redis from "../libs/redis";
 
 export const createReply = async (req: AuthRequest, res: Response) => {
     try {
@@ -90,6 +91,15 @@ export const createReply = async (req: AuthRequest, res: Response) => {
                 data: formattedReply,
                 threadId: threadId
             });
+
+            // Invalidate Cache to update reply counts on feed
+            try {
+                await redis.del("threads:all");
+                await redis.del(`threads:user:${thread.authorId}:all`);
+                // We don't need to invalidate media cache as replies don't show up there usually as threads
+            } catch (error) {
+                console.warn("Redis delete error (createReply):", error);
+            }
         }
 
         return res.status(200).json({
@@ -202,6 +212,24 @@ export const deleteReply = async (req: AuthRequest, res: Response) => {
         await prisma.reply.delete({
             where: { id: replyId },
         });
+
+        // Fetch thread to know who to invalidate (optional but good for profile cache)
+        // Since we already deleted the reply, we might have lost the threadId if we didn't fetch it before.
+        // Wait, 'reply' variable has the data before delete!
+        try {
+            await redis.del("threads:all");
+            // cache key requires author of the THREAD not the reply
+            // We need to fetch the thread author. 'reply' has 'threadId'.
+            const thread = await prisma.thread.findUnique({
+                where: { id: reply.threadId },
+                select: { authorId: true }
+            });
+            if (thread) {
+                await redis.del(`threads:user:${thread.authorId}:all`);
+            }
+        } catch (error) {
+            console.warn("Redis delete error (deleteReply):", error);
+        }
 
         return res.status(200).json({
             code: 200,

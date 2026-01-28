@@ -67,6 +67,20 @@ export const authCheck = createAsyncThunk(
   }
 );
 
+import { updateProfile as apiUpdateProfile } from "../../services/userApi";
+
+export const updateProfileAsync = createAsyncThunk(
+  "auth/updateProfile",
+  async (formData: FormData, thunkAPI) => {
+    try {
+      const res = await apiUpdateProfile(formData);
+      return res.data.data; // Return the updated user object
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message || "Failed to update profile");
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -129,6 +143,11 @@ const authSlice = createSlice({
           state.user = { ...state.user, ...action.payload };
         } else {
           state.user = action.payload;
+        }
+      })
+      .addCase(updateProfileAsync.fulfilled, (state, action) => {
+        if (state.user) {
+          state.user = { ...state.user, ...action.payload };
         }
       });
   },

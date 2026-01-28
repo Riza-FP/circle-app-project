@@ -8,6 +8,10 @@ interface WebSocketContextType {
     successMessage: string | null;
     setSuccessMessage: (msg: string | null) => void;
     newReply: any | null; // Expose new reply for real-time updates
+    newThread: any | null; // Expose new thread for real-time updates
+    deleteThread: any | null; // Expose delete thread event
+    updateThread: any | null; // Expose update thread event
+    likeUpdate: { threadId: number; likes: number } | null; // Expose like update
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | undefined>(
@@ -21,6 +25,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
     const [newReply, setNewReply] = useState<any | null>(null);
+    const [newThread, setNewThread] = useState<any | null>(null);
+    const [deleteThread, setDeleteThreadEvent] = useState<any | null>(null);
+    const [updateThread, setUpdateThreadEvent] = useState<any | null>(null);
+    const [likeUpdate, setLikeUpdate] = useState<{ threadId: number; likes: number } | null>(null);
     const user = useSelector((state: RootState) => state.auth.user);
 
     useEffect(() => {
@@ -60,6 +68,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
 
                 if (data.type === "NEW_THREAD") {
                     dispatch(fetchThreads());
+                    setNewThread(data);
 
                     if (data.data && data.data.authorId === currentUserId) {
                         setSuccessMessage("Your thread has been successfully posted!");
@@ -67,15 +76,23 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
                     }
                 }
 
+                if (data.type === "DELETE_THREAD") {
+                    dispatch(fetchThreads());
+                    setDeleteThreadEvent(data);
+                }
+
+                if (data.type === "UPDATE_THREAD") {
+                    dispatch(fetchThreads());
+                    setUpdateThreadEvent(data);
+                }
+
                 if (data.type === "LIKE_UPDATE") {
                     dispatch(updateLikesFromWebSocket(data.payload));
+                    setLikeUpdate(data.payload);
                 }
 
                 if (data.type === "NEW_REPLY") {
                     setNewReply(data);
-                    // Clear it after short delay so hooks perceive it as an event? 
-                    // Or just rely on useEffect change detection. 
-                    // Let's just set it.
                 }
 
             } catch (error) {
@@ -95,7 +112,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     }, []);
 
     return (
-        <WebSocketContext.Provider value={{ socket, successMessage, setSuccessMessage, newReply }}>
+        <WebSocketContext.Provider value={{ socket, successMessage, setSuccessMessage, newReply, newThread, deleteThread, updateThread, likeUpdate }}>
             {children}
             {successMessage && (
                 <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-green-600 text-white px-8 py-4 rounded-full shadow-2xl z-[100] animate-in fade-in slide-in-from-bottom-5 font-bold text-lg flex items-center space-x-2">

@@ -10,6 +10,7 @@ import followRoutes from "./routes/follow-route";
 import searchRoutes from "./routes/search-route";
 import http from "http";
 import { WebSocketServer, WebSocket } from "ws";
+import { swaggerDocs } from "./utils/swagger";
 
 const app = express();
 
@@ -55,4 +56,5 @@ const PORT = process.env.PORT || 5000;
 
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  swaggerDocs(app, Number(PORT));
 });

@@ -5,10 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { updateProfile } from "../services/userApi";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
-import { authCheck } from "../features/auth/authSlice";
+import { updateProfileAsync } from "../features/auth/authSlice";
 import { Loader2, Camera, X } from "lucide-react";
 import { getAvatarUrl } from "../utils/imageUtils";
 
@@ -64,10 +63,11 @@ const EditProfileModal = ({ isOpen, onClose, user }: EditProfileModalProps) => {
             if (avatarFile) formData.append("avatar", avatarFile);
             if (coverFile) formData.append("cover", coverFile);
 
-            await updateProfile(formData);
+            // await updateProfile(formData); 
+            // dispatch(authCheck()); 
 
-            // Refresh global user state
-            dispatch(authCheck());
+            // Use the new Thunk to update store immediately
+            await dispatch(updateProfileAsync(formData)).unwrap();
 
             toast.success("Profile updated successfully!");
             onClose();

@@ -49,7 +49,7 @@ model Thread {
    images    String[]
  
    threadId  Int
-   thread    Thread   @relation(fields: [threadId], references: [id])
+   thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
  
    authorId  Int
    author    User     @relation(fields: [authorId], references: [id])
@@ -67,8 +67,8 @@ model Thread {
    replyId  Int?
    userId   Int
  
-   thread   Thread? @relation(fields: [threadId], references: [id])
-   reply    Reply?  @relation(fields: [replyId], references: [id])
+   thread   Thread? @relation(fields: [threadId], references: [id], onDelete: Cascade)
+   reply    Reply?  @relation(fields: [replyId], references: [id], onDelete: Cascade)
    user     User    @relation(fields: [userId], references: [id])
  
    @@unique([threadId, userId]) // Keep existing constraint for threads

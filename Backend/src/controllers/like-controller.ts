@@ -2,6 +2,7 @@ import { Response } from "express";
 import prisma from "../connections/client";
 import { AuthRequest } from "../middlewares/auth-middleware";
 import { broadcastToClients } from "../app";
+import redis from "../libs/redis";
 
 export const likeThread = async (req: AuthRequest, res: Response) => {
     try {
@@ -69,6 +70,17 @@ export const likeThread = async (req: AuthRequest, res: Response) => {
             });
         }
 
+        // Invalidate Cache
+        try {
+            await redis.del("threads:all");
+            if (thread && thread.authorId) {
+                await redis.del(`threads:user:${thread.authorId}:all`);
+                await redis.del(`threads:user:${thread.authorId}:media`);
+            }
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
+
         return res.status(200).json({
             code: 200,
             status: "success",
@@ -116,6 +128,22 @@ export const unlikeThread = async (req: AuthRequest, res: Response) => {
                 likes: newLikeCount
             }
         });
+
+        // Invalidate Cache
+        try {
+            await redis.del("threads:all");
+            const thread = await prisma.thread.findUnique({
+                where: { id: threadId },
+                select: { authorId: true }
+            });
+
+            if (thread) {
+                await redis.del(`threads:user:${thread.authorId}:all`);
+                await redis.del(`threads:user:${thread.authorId}:media`);
+            }
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
 
         return res.status(200).json({
             code: 200,

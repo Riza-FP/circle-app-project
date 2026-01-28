@@ -15,9 +15,10 @@ import { WebSocketContext } from "../contexts/WebSocketContext";
 interface ThreadCardProps {
     thread: any;
     hideReplyButton?: boolean;
+    onToggleLike?: (id: number, isLiked: boolean) => void;
 }
 
-const ThreadCard = ({ thread, hideReplyButton }: ThreadCardProps) => {
+const ThreadCard = ({ thread, hideReplyButton, onToggleLike }: ThreadCardProps) => {
     const dispatch = useDispatch<any>();
     const currentUser = useSelector((state: RootState) => state.auth.user);
     const { setSuccessMessage } = useContext(WebSocketContext)!;
@@ -37,6 +38,11 @@ const ThreadCard = ({ thread, hideReplyButton }: ThreadCardProps) => {
 
     const handleLike = (e: React.MouseEvent, id: number) => {
         e.stopPropagation();
+
+        if (onToggleLike) {
+            onToggleLike(id, thread.isLiked);
+        }
+
         if (thread.isLiked) {
             dispatch(unlikeThreadOptimistic(id));
         } else {

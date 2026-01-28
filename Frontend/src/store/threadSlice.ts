@@ -5,7 +5,6 @@ interface Thread {
     id: number;
     isLiked: boolean;
     likes: number;
-    // ... other properties
 }
 
 interface ThreadState {

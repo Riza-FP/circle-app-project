@@ -1,6 +1,7 @@
 import { Response } from "express";
 import { AuthRequest } from "../middlewares/auth-middleware";
 import prisma from "../connections/client";
+import redis from "../libs/redis";
 
 export const followUser = async (req: AuthRequest, res: Response) => {
     try {
@@ -35,6 +36,14 @@ export const followUser = async (req: AuthRequest, res: Response) => {
             }
         });
 
+        // Invalidate Cache for both users (to update counts)
+        try {
+            await redis.del(`user:${followerId}`);
+            await redis.del(`user:${followed_user_id}`);
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
+
         return res.json({
             status: "success",
             message: "You have successfully followed the user.",
@@ -67,6 +76,14 @@ export const unfollowUser = async (req: AuthRequest, res: Response) => {
                 }
             }
         });
+
+        // Invalidate Cache for both users
+        try {
+            await redis.del(`user:${followerId}`);
+            await redis.del(`user:${followed_id}`);
+        } catch (error) {
+            console.warn("Redis delete error:", error);
+        }
 
         return res.json({
             status: "success",
@@ -164,7 +181,7 @@ export const getFollows = async (req: AuthRequest, res: Response) => {
 
             return res.json({
                 status: "success",
-                data: { followers: data } // Spec example uses 'followers' key even for following list? "followers": [...] in request_3 response body. I will stick to spec.
+                data: { followers: data }
             });
         }
 

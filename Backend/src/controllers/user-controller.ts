@@ -101,6 +101,19 @@ export const updateProfile = async (req: AuthRequest, res: Response) => {
             data: updateData
         });
 
+        // Invalidate Caches
+        try {
+            // Invalidate user profile cache
+            await redis.del(`user:${id}`);
+
+            // Invalidate threads caches because they contain user details (author)
+            await redis.del("threads:all");
+            await redis.del(`threads:user:${id}:all`);
+            await redis.del(`threads:user:${id}:media`);
+        } catch (error) {
+            console.warn("Redis delete error (updateProfile):", error);
+        }
+
         return res.status(200).json({
             code: 200,
             status: "success",

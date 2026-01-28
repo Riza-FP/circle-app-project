@@ -11,11 +11,14 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import ThreadCard from "../components/ThreadCard";
 import EditProfileModal from "../components/EditProfileModal";
 import { getAvatarUrl } from "../utils/imageUtils";
+import { WebSocketContext } from "../contexts/WebSocketContext";
+import { useContext } from "react";
 
 const Profile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user: currentUser } = useSelector((state: any) => state.auth);
+    const { newThread } = useContext(WebSocketContext)!;
     const [isEditOpen, setIsEditOpen] = useState(false);
 
     // State for other user
@@ -77,6 +80,51 @@ const Profile = () => {
     }, [displayUser, id, isOwnProfile, currentUser, activeTab]);
 
 
+    // Real-time thread update
+    useEffect(() => {
+        if (newThread && displayUser) {
+            const isTargetUser = newThread.data.authorId === (displayUser.id || displayUser.user_id);
+            if (isTargetUser) {
+                setThreads((prev) => {
+                    if (prev.find((t) => t.id === newThread.data.id)) return prev;
+                    return [newThread.data, ...prev];
+                });
+            }
+        }
+    }, [newThread, displayUser]);
+
+    // Real-time thread update
+    const { deleteThread, updateThread, likeUpdate } = useContext(WebSocketContext)!;
+
+    useEffect(() => {
+        if (deleteThread) {
+            setThreads((prev) => prev.filter((t) => t.id !== deleteThread.threadId));
+        }
+    }, [deleteThread]);
+
+    // Real-time thread update
+    useEffect(() => {
+        if (updateThread) {
+            setThreads((prev) =>
+                prev.map((t) => (t.id === updateThread.data.id ? { ...t, ...updateThread.data } : t))
+            );
+        }
+    }, [updateThread]);
+
+    // Real-time like update
+    useEffect(() => {
+        if (likeUpdate) {
+            setThreads((prev) =>
+                prev.map((t) =>
+                    t.id === likeUpdate.threadId
+                        ? { ...t, likes: likeUpdate.likes } // Only update the count, keep isLiked as is (local user logic)
+                        : t
+                )
+            );
+        }
+    }, [likeUpdate]);
+
+
     const handleFollowToggle = async () => {
         if (!otherUser) return;
         setFollowLoading(true);
@@ -101,6 +149,20 @@ const Profile = () => {
         } finally {
             setFollowLoading(false);
         }
+    };
+
+    const handleLikeToggle = (threadId: number, isLiked: boolean) => {
+        setThreads((prevThreads) =>
+            prevThreads.map((thread) =>
+                thread.id === threadId
+                    ? {
+                        ...thread,
+                        isLiked: !isLiked,
+                        likes: isLiked ? thread.likes - 1 : thread.likes + 1
+                    }
+                    : thread
+            )
+        );
     };
 
     if (loading) {
@@ -233,7 +295,11 @@ const Profile = () => {
                                 </div>
                             ) : (
                                 threads.map((thread) => (
-                                    <ThreadCard key={thread.id} thread={thread} />
+                                    <ThreadCard
+                                        key={thread.id}
+                                        thread={thread}
+                                        onToggleLike={handleLikeToggle}
+                                    />
                                 ))
                             )
                         ) : (
