@@ -69,11 +69,7 @@ const ThreadDetail = () => {
             // Check if reply already exists to avoid duplicates (though duplication unlikely with simple append unless event fires twice)
             setReplies(prev => {
                 if (prev.find(r => r.id === newReply.data.id)) return prev;
-                return [newReply.data, ...prev]; // Prepend or append? Usually replies are chronological?
-                // API sorts by createdAt desc (newest first). So we should prepend?
-                // Wait, default sort in getReplies: orderBy: { createdAt: "desc" }
-                // So mappedReplies has newest first.
-                // So we should prepend newReply.data.
+                return [newReply.data, ...prev];
             });
         }
     }, [newReply, id]);

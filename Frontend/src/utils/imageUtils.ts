@@ -2,5 +2,6 @@
 export const getAvatarUrl = (path: string | undefined | null) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    return `http://localhost:5000${path}`;
+    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    return `${baseUrl}${path}`;
 };

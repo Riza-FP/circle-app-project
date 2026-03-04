@@ -32,7 +32,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
     const user = useSelector((state: RootState) => state.auth.user);
 
     useEffect(() => {
-        const ws = new WebSocket("ws://localhost:5000");
+        const wsUrl = import.meta.env.VITE_WS_URL || "ws://localhost:5000";
+        const ws = new WebSocket(wsUrl);
 
         ws.onopen = () => {
             console.log("Connected to WebSocket");
