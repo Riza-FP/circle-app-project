@@ -72,7 +72,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({
                     setNewThread(data);
 
                     if (data.data && data.data.authorId === currentUserId) {
-                        setSuccessMessage("Your thread has been successfully posted!");
+                        setSuccessMessage("Thread posted successfully!");
                         setTimeout(() => setSuccessMessage(null), 5000);
                     }
                 }

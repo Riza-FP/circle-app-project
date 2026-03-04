@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import MainLayout from "../layout/MainLayout";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../features/auth/authSlice";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getUserById } from "../services/userApi";
 import { followUser, unfollowUser } from "../services/followApi";
 import { getThreadsByUser } from "../services/threadApi";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, LogOut } from "lucide-react";
 import ThreadCard from "../components/ThreadCard";
 import EditProfileModal from "../components/EditProfileModal";
 import { getAvatarUrl } from "../utils/imageUtils";
@@ -17,6 +18,7 @@ import { useContext } from "react";
 const Profile = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
     const { user: currentUser } = useSelector((state: any) => state.auth);
     const { newThread } = useContext(WebSocketContext)!;
     const [isEditOpen, setIsEditOpen] = useState(false);
@@ -33,6 +35,11 @@ const Profile = () => {
     const [activeTab, setActiveTab] = useState<"posts" | "media">("posts");
 
     const isOwnProfile = !id || currentUser?.id === parseInt(id) || currentUser?.user_id === parseInt(id);
+
+    const handleLogout = () => {
+        dispatch(logout());
+        navigate("/");
+    };
 
     // Fetch user fetching logic for "Other User"
     useEffect(() => {
@@ -217,15 +224,25 @@ const Profile = () => {
                     </div>
 
                     {/* Actions Row */}
-                    <div className="flex justify-end p-4 h-16">
+                    <div className="flex justify-end p-4 h-16 space-x-2">
                         {isOwnProfile ? (
-                            <Button
-                                variant="outline"
-                                className="rounded-full border-gray-600 text-white hover:bg-white/10"
-                                onClick={() => setIsEditOpen(true)}
-                            >
-                                Edit Profile
-                            </Button>
+                            <>
+                                <Button
+                                    variant="outline"
+                                    className="rounded-full border-gray-600 text-white hover:bg-white/10"
+                                    onClick={() => setIsEditOpen(true)}
+                                >
+                                    Edit Profile
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="rounded-full border-red-600 text-red-500 hover:bg-red-500/10 md:hidden"
+                                    onClick={handleLogout}
+                                >
+                                    <LogOut className="w-4 h-4 mr-2" />
+                                    Logout
+                                </Button>
+                            </>
                         ) : (
                             <Button
                                 variant={displayUser?.is_following ? "outline" : "default"}
