@@ -27,7 +27,7 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
     const [editContent, setEditContent] = useState(reply.content);
     const [editImages, setEditImages] = useState<File[]>([]);
     const [editPreviews, setEditPreviews] = useState<string[]>(
-        reply.images ? reply.images.map((img: string) => img.startsWith("http") ? img : `http://localhost:5000${img}`) : []
+        reply.images ? reply.images.map((img: string) => img.startsWith("http") ? img : `${import.meta.env.VITE_API_URL}${img}`) : []
     );
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -97,7 +97,7 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
                 {images.map((img, index) => (
                     <img
                         key={index}
-                        src={img.startsWith("http") ? img : `http://localhost:5000${img}`}
+                        src={img.startsWith("http") ? img : `${import.meta.env.VITE_API_URL}${img}`}
                         alt={`Attachment ${index + 1}`}
                         className={`w-full object-cover border border-gray-800 ${count === 1 ? 'max-h-[500px]' : 'h-[200px]'
                             } ${count === 3 && index === 0 ? 'row-span-2 h-full' : ''}`}
@@ -230,7 +230,7 @@ const ReplyCard = ({ reply, onRefresh }: ReplyCardProps) => {
                                     onClick={() => {
                                         setIsEditing(false);
                                         setEditImages([]);
-                                        setEditPreviews(reply.images ? reply.images.map((img: string) => img.startsWith("http") ? img : `http://localhost:5000${img}`) : []);
+                                        setEditPreviews(reply.images ? reply.images.map((img: string) => img.startsWith("http") ? img : `${import.meta.env.VITE_API_URL}${img}`) : []);
                                     }}
                                     className="px-3 py-1 bg-gray-700 text-white rounded-full text-sm flex items-center gap-1 hover:bg-gray-600"
                                 >
