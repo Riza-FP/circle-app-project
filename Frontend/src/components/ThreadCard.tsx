@@ -135,11 +135,11 @@ const ThreadCard = ({ thread, hideReplyButton, onToggleLike }: ThreadCardProps) 
                     <AvatarImage src={getAvatarUrl(thread.user.profile_picture)} className="object-cover" />
                     <AvatarFallback>{thread.user.name[0]}</AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center flex-wrap gap-x-1 sm:gap-x-2 mr-2 min-w-0">
                             <span
-                                className="font-bold hover:underline cursor-pointer"
+                                className="font-bold hover:underline cursor-pointer truncate max-w-[120px] sm:max-w-none text-sm sm:text-base"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/profile/${thread.user.id}`);
@@ -148,7 +148,7 @@ const ThreadCard = ({ thread, hideReplyButton, onToggleLike }: ThreadCardProps) 
                                 {thread.user.name}
                             </span>
                             <span
-                                className="text-gray-500 hover:underline cursor-pointer"
+                                className="text-gray-500 hover:underline cursor-pointer truncate max-w-[90px] sm:max-w-none text-sm sm:text-base"
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/profile/${thread.user.id}`);
@@ -156,8 +156,8 @@ const ThreadCard = ({ thread, hideReplyButton, onToggleLike }: ThreadCardProps) 
                             >
                                 @{thread.user.username}
                             </span>
-                            <span className="text-gray-500">•</span>
-                            <span className="text-gray-500 text-sm">
+                            <span className="text-gray-500 hidden sm:inline">•</span>
+                            <span className="text-gray-500 text-xs sm:text-sm whitespace-nowrap">
                                 {thread.created_at
                                     ? formatDistanceToNow(new Date(thread.created_at), { addSuffix: true })
                                     : "just now"}
